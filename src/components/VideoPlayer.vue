@@ -515,12 +515,14 @@ export default {
                     }
                 };
 
-                
+                shaka.ui.OverflowMenu.registerElement("open_new_tab", new OpenButton.Factory());
                 this.$ui = new shaka.ui.Overlay(localPlayer, this.$refs.container, videoEl);
 
                 const overflowMenuButtons = ["quality", "captions", "picture_in_picture", "playback_rate", "airplay"];
 
-                                 
+                if (this.isEmbed) {
+                    overflowMenuButtons.push("open_new_tab");
+                    }                 
                 const config = {
                     overflowMenuButtons: overflowMenuButtons,
                     seekBarColors: {
