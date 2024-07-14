@@ -521,7 +521,10 @@ export default {
 
                 const overflowMenuButtons = ["quality", "captions", "picture_in_picture", "playback_rate", "airplay"];
 
-               
+                if (this.isEmbed) {
+                    overflowMenuButtons.push("cast");
+                }
+                
                 const config = {
                     overflowMenuButtons: overflowMenuButtons,
                     seekBarColors: {
