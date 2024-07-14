@@ -990,8 +990,5 @@ export default {
 .skip-segment-button .material-icons-round {
     font-size: 1.6em !important;
     line-height: inherit !important;
-}
-.shaka-cast-button {
-  display: none;
 }   
 </style>
