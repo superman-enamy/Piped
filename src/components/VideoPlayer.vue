@@ -521,10 +521,9 @@ export default {
 
                 const overflowMenuButtons = ["quality", "captions", "picture_in_picture", "playback_rate", "airplay"];
 
-                if (this.isEmbed) {
+                 if (this.isEmbed) {
                     overflowMenuButtons.push("open_new_tab");
-                }
-                
+                }                
                 const config = {
                     overflowMenuButtons: overflowMenuButtons,
                     seekBarColors: {
