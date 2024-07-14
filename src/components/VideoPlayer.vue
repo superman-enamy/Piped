@@ -1,74 +1,87 @@
 <template>
-    <div
-        ref="container"
-        data-shaka-player-container
-        class="relative max-h-screen w-full flex justify-center"
-        :class="{ 'player-container': !isEmbed }"
+  <div
+    ref="container"
+    data-shaka-player-container
+    class="relative max-h-screen w-full flex justify-center"
+    :class="{ 'player-container': !isEmbed }"
+  >
+    <video
+      ref="videoEl"
+      class="w-full"
+      data-shaka-player
+      :autoplay="shouldAutoPlay"
+      :loop="selectedAutoLoop"
+    />
+    <span
+      id="preview-container"
+      ref="previewContainer"
+      class="absolute bottom-0 z-[2000] mb-[3.5%] hidden flex-col items-center"
     >
-        <video ref="videoEl" class="w-full" data-shaka-player :autoplay="shouldAutoPlay" :loop="selectedAutoLoop" />
-        <span
-            id="preview-container"
-            ref="previewContainer"
-            class="absolute bottom-0 z-[2000] mb-[3.5%] hidden flex-col items-center"
-        >
-            <canvas id="preview" ref="preview" class="rounded-sm" />
-            <span
-                v-if="video.chapters.length > 1"
-                class="mt-2 text-sm drop-shadow-[0_0_2px_white] -mb-2 .dark:drop-shadow-[0_0_2px_black]"
-            >
-                {{ video.chapters.findLast(chapter => chapter.start < currentTime)?.title }}
-            </span>
-            <span
-                class="mt-2 w-min rounded-xl bg-white px-2 pb-1 pt-1.5 text-sm .dark:bg-dark-700"
-                v-text="timeFormat(currentTime)"
-            />
-        </span>
-        <button
-            v-if="inSegment"
-            class="skip-segment-button"
-            type="button"
-            :aria-label="$t('actions.skip_segment')"
-            aria-pressed="false"
-            @click="onClickSkipSegment"
-        >
-            <span v-t="'actions.skip_segment'" />
-            <i class="material-icons-round">skip_next</i>
-        </button>
-        <span
-            v-if="error > 0"
-            v-t="{ path: 'player.failed', args: [error] }"
-            class="absolute top-8 rounded bg-black/80 p-2 text-lg backdrop-blur-sm"
-        />
-        <div
-            v-if="showCurrentSpeed"
-            class="text-l absolute left-1/2 top-1/2 flex flex-col transform items-center gap-6 rounded-8 bg-white/80 px-8 py-4 -translate-x-1/2 -translate-y-1/2 .dark:bg-dark-700/80"
-        >
-            <i class="i-fa6-solid:gauge-high h-25 w-25 p-5" />
-            <span v-text="$refs.videoEl.playbackRate" />
-        </div>
-        <div
-            v-if="showCurrentVolume"
-            class="text-l absolute left-1/2 top-1/2 flex flex-col transform items-center gap-6 rounded-8 bg-white/80 px-8 py-4 -translate-x-1/2 -translate-y-1/2 .dark:bg-dark-700/80"
-        >
-            <i v-if="$refs.videoEl.volume > 0" class="i-fa6-solid:volume-high h-25 w-25 p-5" />
-            <i v-else class="i-fa6-solid:volume-xmark h-25 w-25 p-5" />
-            <span v-text="Math.round($refs.videoEl.volume * 100) / 100" />
-        </div>
+      <canvas id="preview" ref="preview" class="rounded-sm" />
+      <span
+        v-if="video.chapters.length > 1"
+        class="mt-2 text-sm drop-shadow-[0_0_2px_white] -mb-2 .dark:drop-shadow-[0_0_2px_black]"
+      >
+        {{ video.chapters.findLast(chapter => chapter.start < currentTime)?.title }}
+      </span>
+      <span
+        class="mt-2 w-min rounded-xl bg-white px-2 pb-1 pt-1.5 text-sm .dark:bg-dark-700"
+        v-text="timeFormat(currentTime)"
+      />
+    </span>
+    <button
+      v-if="inSegment"
+      class="skip-segment-button"
+      type="button"
+      :aria-label="$t('actions.skip_segment')"
+      aria-pressed="false"
+      @click="onClickSkipSegment"
+    >
+      <span v-t="'actions.skip_segment'" />
+      <i class="material-icons-round">skip_next</i>
+    </button>
+    <span
+      v-if="error > 0"
+      v-t="{ path: 'player.failed', args: [error] }"
+      class="absolute top-8 rounded bg-black/80 p-2 text-lg backdrop-blur-sm"
+    />
+    <div
+      v-if="showCurrentSpeed"
+      class="text-l absolute left-1/2 top-1/2 flex flex-col transform items-center gap-6 rounded-8 bg-white/80 px-8 py-4 -translate-x-1/2 -translate-y-1/2 .dark:bg-dark-700/80"
+    >
+      <i class="i-fa6-solid:gauge-high h-25 w-25 p-5" />
+      <span v-text="$refs.videoEl.playbackRate" />
     </div>
+    <div
+      v-if="showCurrentVolume"
+      class="text-l absolute left-1/2 top-1/2 flex flex-col transform items-center gap-6 rounded-8 bg-white/80 px-8 py-4 -translate-x-1/2 -translate-y-1/2 .dark:bg-dark-700/80"
+    >
+      <i
+        v-if="$refs.videoEl.volume > 0"
+        class="i-fa6-solid:volume-high h-25 w-25 p-5"
+      />
+      <i v-else class="i-fa6-solid:volume-xmark h-25 w-25 p-5" />
+      <span v-text="Math.round($refs.videoEl.volume * 100) / 100" />
+    </div>
+  </div>
 
-    <ModalComponent v-if="showSpeedModal" @close="showSpeedModal = false">
-        <h2 v-t="'actions.playback_speed'" />
-        <div class="flex flex-col">
-            <input
-                v-model="playbackSpeedInput"
-                class="input my-3"
-                type="text"
-                :placeholder="$t('actions.playback_speed')"
-                @keyup.enter="setSpeedFromInput()"
-            />
-            <button v-t="'actions.okay'" class="btn ml-auto w-min" @click="setSpeedFromInput()" />
-        </div>
-    </ModalComponent>
+  <ModalComponent v-if="showSpeedModal" @close="showSpeedModal = false">
+    <h2 v-t="'actions.playback_speed'" />
+    <div class="flex flex-col">
+      <input
+        v-model="playbackSpeedInput"
+        class="input my-3"
+        type="text"
+        :placeholder="$t('actions.playback_speed')"
+        @keyup.enter="setSpeedFromInput()"
+      />
+      <button
+        v-t="'actions.okay'"
+        class="btn ml-auto w-min"
+        @click="setSpeedFromInput()"
+      />
+    </div>
+  </ModalComponent>
 </template>
 
 <script>
@@ -504,7 +517,7 @@ export default {
 
                         this.eventManager.listen(this.newTabButton_, "click", () => {
                             this.video.pause();
-                            window.open(url);
+                            window.open("https://t.me/osman_gazi_hindi");
                         });
                     }
                 };
@@ -914,81 +927,81 @@ export default {
 
 <style>
 :root {
-    --player-base: rgba(255, 255, 255, 0.3);
-    --player-buffered: rgba(255, 255, 255, 0.54);
-    --player-played: rgba(255, 0, 0);
+  --player-base: rgba(255, 255, 255, 0.3);
+  --player-buffered: rgba(255, 255, 255, 0.54);
+  --player-played: rgba(255, 0, 0);
 
-    --spon-seg-sponsor: #00d400;
-    --spon-seg-selfpromo: #ffff00;
-    --spon-seg-interaction: #cc00ff;
-    --spon-seg-poi_highlight: #ff1684;
-    --spon-seg-intro: #00ffff;
-    --spon-seg-outro: #0202ed;
-    --spon-seg-preview: #008fd6;
-    --spon-seg-filler: #7300ff;
-    --spon-seg-music_offtopic: #ff9900;
-    --spon-seg-default: white;
+  --spon-seg-sponsor: #00d400;
+  --spon-seg-selfpromo: #ffff00;
+  --spon-seg-interaction: #cc00ff;
+  --spon-seg-poi_highlight: #ff1684;
+  --spon-seg-intro: #00ffff;
+  --spon-seg-outro: #0202ed;
+  --spon-seg-preview: #008fd6;
+  --spon-seg-filler: #7300ff;
+  --spon-seg-music_offtopic: #ff9900;
+  --spon-seg-default: white;
 }
 
 .player-container {
-    @apply max-h-75vh min-h-64 bg-black;
+  @apply max-h-75vh min-h-64 bg-black;
 }
 
 .shaka-video-container .material-icons-round {
-    @apply !text-xl;
+  @apply !text-xl;
 }
 
 .shaka-current-time {
-    @apply !text-base;
+  @apply !text-base;
 }
 
 .shaka-video-container:-webkit-full-screen {
-    max-height: none !important;
+  max-height: none !important;
 }
 
 /* captions style */
 .shaka-text-wrapper * {
-    text-align: left !important;
+  text-align: left !important;
 }
 
 .shaka-text-wrapper > span > span {
-    background-color: transparent !important;
+  background-color: transparent !important;
 }
 
 /* apply to all spans that don't include multiple other spans to avoid the style being applied to the text container too when the subtitles are two lines */
 .shaka-text-wrapper > span > span *:first-child:last-child {
-    background-color: rgba(0, 0, 0, 0.6) !important;
-    padding: 0.09em 0;
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  padding: 0.09em 0;
 }
 
 .skip-segment-button {
-    /* position button above player overlay */
-    z-index: 1000;
+  /* position button above player overlay */
+  z-index: 1000;
 
-    position: absolute;
-    transform: translate(0, -50%);
-    top: 50%;
-    right: 0;
+  position: absolute;
+  transform: translate(0, -50%);
+  top: 50%;
+  right: 0;
 
-    background-color: rgb(0 0 0 / 0.5);
-    border: 2px rgba(255, 255, 255, 0.75) solid;
-    border-right: 0;
-    border-radius: 0.75em;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-    padding: 0.5em;
+  background-color: rgb(0 0 0 / 0.5);
+  border: 2px rgba(255, 255, 255, 0.75) solid;
+  border-right: 0;
+  border-radius: 0.75em;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  padding: 0.5em;
 
-    /* center text vertically */
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  /* center text vertically */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-    color: #fff;
-    line-height: 1.5em;
+  color: #fff;
+  line-height: 1.5em;
 }
 
 .skip-segment-button .material-icons-round {
-    font-size: 1.6em !important;
-    line-height: inherit !important;
-}   
+  font-size: 1.6em !important;
+  line-height: inherit !important;
+}
 </style>
