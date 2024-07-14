@@ -991,4 +991,7 @@ export default {
     font-size: 1.6em !important;
     line-height: inherit !important;
 }
+.shaka-cast-button {
+  display: none;
+}   
 </style>
